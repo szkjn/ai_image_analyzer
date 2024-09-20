@@ -4,12 +4,14 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from playsound import playsound
+import pygame
 from PIL import Image
 
 from api_calls import generate_image_desc, create_judgemental_desc, generate_audio
 from prompt_data import MAX_TOKENS, ERROR_SOUND, ai_personas
 from utilities import clean_folder
 
+pygame.mixer.init()
 
 class MP3Handler(FileSystemEventHandler):
     """Handles MP3 file creation events."""
@@ -21,7 +23,10 @@ class MP3Handler(FileSystemEventHandler):
             print(f"-> Detected MP3 file creation: {event.src_path}")
             self._play_audio(event.src_path)
         except:
-            playsound(ERROR_SOUND)
+            pygame.mixer.music.load(ERROR_SOUND)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             print(">> ERROR: MP3Handler > on_created")   
 
 
@@ -30,7 +35,12 @@ class MP3Handler(FileSystemEventHandler):
         try:
             # sound_step1_path = 'audio/base/judgement2.mp3'
             # playsound(sound_step1_path)
-            playsound(filepath)
+
+            # playsound(filepath)
+            pygame.mixer.music.load(filepath)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
 
             archive_dir = "archive"
             base_name = os.path.basename(filepath)
@@ -46,7 +56,10 @@ class MP3Handler(FileSystemEventHandler):
             clean_folder('tmp')
         
         except:
-            playsound(ERROR_SOUND)
+            pygame.mixer.music.load(ERROR_SOUND)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             print(">> ERROR: MP3Handler > _play_audio")         
 
 
@@ -74,7 +87,10 @@ class ImageHandler(FileSystemEventHandler):
                 self._analyze_and_speak(event.src_path, file_name)
 
         except:
-            playsound(ERROR_SOUND)
+            pygame.mixer.music.load(ERROR_SOUND)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             print(">> ERROR: ImageHandler > on_created")     
 
 
@@ -92,7 +108,10 @@ class ImageHandler(FileSystemEventHandler):
             print(f"-- Image converted to JPEG: {output_path}")
 
         except:
-            playsound(ERROR_SOUND)
+            pygame.mixer.music.load(ERROR_SOUND)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             print(">> ERROR: _convert_image_to_jpeg")
 
 
@@ -117,11 +136,17 @@ class ImageHandler(FileSystemEventHandler):
                 output_path = os.path.join(os.path.dirname(filepath).replace("image", "audio"), file_name + ".mp3")
                 generate_audio(judgy_desc, id, output_path)
             else:
-                playsound(ERROR_SOUND)
+                pygame.mixer.music.load(ERROR_SOUND)
+                pygame.mixer.music.play()
+                while pygame.mixer.music.get_busy():
+                    pygame.time.Clock().tick(10)
                 print(">> ERROR: no judgment")
         
         except:
-            playsound(ERROR_SOUND)
+            pygame.mixer.music.load(ERROR_SOUND)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
             print(">> ERROR: _analyze_and_speak")
 
 

@@ -10,10 +10,8 @@ from prompt_data import MAX_TOKENS, ERROR_SOUND, ai_personas
 from utilities import SoundPlayer
 
 # Initialize OpenAI clients with multiple API keys
-api_key_av = os.environ.get('OPENAI_API_KEY1')
-api_key_txt = os.environ.get('OPENAI_API_KEY2')
-client_av = OpenAI(api_key=api_key_av)
-client_txt = OpenAI(api_key=api_key_txt)
+api_key = os.environ.get('OPENAI_API_KEY1')
+client = OpenAI(api_key=api_key)
 
 common_prompt = f"DON'T COMMENT ON QUALITY OF PICTURE OR BACKGROUND. COMMENT ON THE SUBJECT ITSELF. \
     RESPOND IN AROUND {MAX_TOKENS} TOKENS. \
@@ -35,8 +33,8 @@ def generate_image_desc(image_path: str, max_tokens: int) -> str:
     try:
         with open(image_path, 'rb') as image_file:
             base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-            response = client_av.chat.completions.create(
-                model="gpt-4-vision-preview", 
+            response = client.chat.completions.create(
+                model="gpt-4o-mini", 
                 messages=[
                     {
                         "role": "user",
@@ -72,7 +70,7 @@ def generate_image_desc(image_path: str, max_tokens: int) -> str:
 
 
     except Exception as e:
-        playsound(ERROR_SOUND)
+        # playsound(ERROR_SOUND)
         print(f"-- ERROR: Failed to analyze image: {e}")
 
     sound_player.stop()
@@ -96,26 +94,30 @@ def create_judgemental_desc(text_str: str, id: int, max_tokens: int) -> str:
     print("-- 2. Generating judgmental description")
     
     try:
-        chat_completion = client_txt.chat.completions.create(
-            model="gpt-3.5-turbo",
+        print("-- Attempting to create judgement")
+        chat_completion = client.chat.completions.create(
+            model="gpt-4o-mini",
             response_format={ "type": "json_object" },
             messages=[
                 {"role": "system", "content": ai_personas[id]["prompt"] + common_prompt},
                 {"role": "user", "content": text_str},
             ],
             max_tokens=max_tokens,
-            temperature=1.5
+            temperature=1.2
         )
 
+        print("-- Judgement created successfully")
         response = chat_completion.choices[0].message.content
+        print(f"-- Response received: {response}")
         response_json = json.loads(response)
 
         judgemental_desc = response_json['res']
         print(f">> Judgement is done: {judgemental_desc}")    
     
     except Exception as e:
-        playsound(ERROR_SOUND)
+        # playsound(ERROR_SOUND)
         print(f"-- ERROR: Failed to create judgement: {e}")
+        print(f"-- Exception details: {str(e)}")
 
     sound_player.stop()
 
@@ -138,7 +140,7 @@ def generate_audio(text_str: str, id: int, output_path: str):
 
     try:
         # Generate audio file from content with specified voice
-        response = client_av.audio.speech.create(
+        response = client.audio.speech.create(
             model="tts-1",
             input=text_str,
             voice=ai_personas[id]["voice"],
@@ -149,7 +151,7 @@ def generate_audio(text_str: str, id: int, output_path: str):
         print(f"-- Conversation audio segments saved with alternating voices.")
 
     except Exception as e:
-        playsound(ERROR_SOUND)
+        # playsound(ERROR_SOUND)
         print(f"-- ERROR: Failed to analyze image: {e}")
 
     sound_player.stop()

@@ -1,5 +1,6 @@
 import threading
 from playsound import playsound
+import pygame
 import os
 
 
@@ -11,7 +12,11 @@ class SoundPlayer:
 
     def _play_loop(self):
         while self.playing:
-            playsound(self.sound_path)
+            # playsound(self.sound_path)
+            pygame.mixer.music.load(self.sound_path)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
 
     def start(self):
         if not self.playing:
